@@ -1,0 +1,636 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Continuous Health Monitoring</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <style>
+        :root {
+            --bg-color: #f8f9fa;
+            --text-color: #212529;
+            --card-bg: #ffffff;
+            --sidebar-bg: #ffffff;
+            --shadow: rgba(0, 0, 0, 0.1);
+            --accent-1: #667eea;
+            --accent-2: #764ba2;
+        }
+
+        [data-theme="dark"] {
+            --bg-color: #1a1a2e;
+            --text-color: #eaeaea;
+            --card-bg: #16213e;
+            --sidebar-bg: #0f3460;
+            --shadow: rgba(0, 0, 0, 0.5);
+        }
+
+        * {
+            transition: background-color 0.3s ease, color 0.3s ease;
+        }
+
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            min-height: 100vh;
+        }
+
+        .navbar {
+            background-color: var(--card-bg);
+            box-shadow: 0 2px 10px var(--shadow);
+            padding: 1rem 2rem;
+        }
+
+        .menu-btn {
+            background: none;
+            border: none;
+            font-size: 1.5rem;
+            color: var(--text-color);
+            cursor: pointer;
+        }
+
+        .username {
+            font-weight: 600;
+            color: var(--text-color);
+        }
+
+        .notification-btn {
+            position: relative;
+            background: none;
+            border: none;
+            font-size: 1.3rem;
+            color: var(--text-color);
+            cursor: pointer;
+        }
+
+        .notification-badge {
+            position: absolute;
+            top: -5px;
+            right: -5px;
+            background: #dc3545;
+            color: white;
+            border-radius: 50%;
+            width: 18px;
+            height: 18px;
+            font-size: 0.7rem;
+            display: none;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .notification-badge.active {
+            display: flex;
+        }
+
+        .sidebar {
+            position: fixed;
+            left: -300px;
+            top: 0;
+            width: 300px;
+            height: 100vh;
+            background-color: var(--sidebar-bg);
+            box-shadow: 2px 0 10px var(--shadow);
+            transition: left 0.3s ease;
+            z-index: 1050;
+            overflow-y: auto;
+        }
+
+        .sidebar.active {
+            left: 0;
+        }
+
+        .sidebar-header {
+            padding: 1.5rem;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .close-btn {
+            background: none;
+            border: none;
+            font-size: 1.5rem;
+            color: var(--text-color);
+            cursor: pointer;
+            float: right;
+        }
+
+        .sidebar-menu {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+
+        .sidebar-menu li {
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        .sidebar-menu a {
+            display: block;
+            padding: 1rem 1.5rem;
+            color: var(--text-color);
+            text-decoration: none;
+            transition: background-color 0.2s;
+        }
+
+        .sidebar-menu a:hover {
+            background-color: rgba(255, 255, 255, 0.05);
+        }
+
+        .sidebar-menu i {
+            margin-right: 10px;
+            width: 20px;
+        }
+
+        .theme-toggle {
+            padding: 1rem 1.5rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            display: none;
+            z-index: 1040;
+        }
+
+        .overlay.active {
+            display: block;
+        }
+
+        .dashboard-container {
+            max-width: 1400px;
+            margin: 2rem auto;
+            padding: 0 2rem;
+        }
+
+        .page-title {
+            text-align: center;
+            margin-bottom: 2rem;
+            font-size: 2.5rem;
+            font-weight: 700;
+            background: linear-gradient(135deg, var(--accent-1) 0%, var(--accent-2) 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .category-section {
+            margin-bottom: 2rem;
+        }
+
+        .category-header {
+            background: linear-gradient(135deg, var(--accent-1) 0%, var(--accent-2) 100%);
+            color: white;
+            padding: 1rem 1.5rem;
+            border-radius: 15px 15px 0 0;
+            font-size: 1.3rem;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .category-header i {
+            font-size: 1.5rem;
+        }
+
+        .category-content {
+            background-color: var(--card-bg);
+            border-radius: 0 0 15px 15px;
+            padding: 1.5rem;
+            box-shadow: 0 5px 20px var(--shadow);
+        }
+
+        .metric-card {
+            background: linear-gradient(135deg, rgba(102, 126, 234, 0.05) 0%, rgba(118, 75, 162, 0.05) 100%);
+            border-left: 4px solid var(--accent-1);
+            padding: 1rem 1.5rem;
+            border-radius: 10px;
+            margin-bottom: 1rem;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        .metric-card:hover {
+            transform: translateX(5px);
+            box-shadow: 0 3px 15px var(--shadow);
+        }
+
+        .metric-card h5 {
+            margin: 0;
+            font-size: 1rem;
+            font-weight: 600;
+            color: var(--text-color);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .metric-card i {
+            color: var(--accent-1);
+        }
+
+        .form-switch .form-check-input {
+            width: 3rem;
+            height: 1.5rem;
+            cursor: pointer;
+        }
+
+        .form-switch .form-check-input:checked {
+            background-color: #667eea;
+            border-color: #667eea;
+        }
+
+        @media (max-width: 768px) {
+            .page-title {
+                font-size: 1.8rem;
+            }
+            
+            .category-header {
+                font-size: 1.1rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Navbar -->
+    <nav class="navbar">
+        <div class="container-fluid">
+            <button class="menu-btn" id="menuBtn">
+                <i class="fas fa-bars"></i>
+            </button>
+            <span class="username">
+                <i class="fas fa-user-circle me-2"></i>John Doe
+            </span>
+            <button class="notification-btn" id="notificationBtn">
+                <i class="fas fa-bell"></i>
+                <span class="notification-badge" id="notificationBadge">3</span>
+            </button>
+        </div>
+    </nav>
+
+    <!-- Sidebar -->
+    <div class="sidebar" id="sidebar">
+        <div class="sidebar-header">
+            <button class="close-btn" id="closeBtn">
+                <i class="fas fa-times"></i>
+            </button>
+            <h5 class="mt-2">Menu</h5>
+        </div>
+        <div class="theme-toggle">
+            <span><i class="fas fa-moon"></i> Dark Mode</span>
+            <div class="form-check form-switch">
+                <input class="form-check-input" type="checkbox" id="themeToggle">
+            </div>
+        </div>
+        <ul class="sidebar-menu">
+            <li><a href="#"><i class="fas fa-user"></i>User Details</a></li>
+            <li><a href="#"><i class="fas fa-calendar-check"></i>Appointments</a></li>
+            <li><a href="#"><i class="fas fa-cog"></i>Settings</a></li>
+            <li><a href="#"><i class="fas fa-file-medical"></i>Medical History</a></li>
+            <li><a href="#"><i class="fas fa-pills"></i>Medications</a></li>
+            <li><a href="#"><i class="fas fa-chart-line"></i>Health Reports</a></li>
+            <li><a href="#"><i class="fas fa-info-circle"></i>Help & Support</a></li>
+            <li><a href="#"><i class="fas fa-sign-out-alt"></i>Logout</a></li>
+        </ul>
+    </div>
+
+    <!-- Overlay -->
+    <div class="overlay" id="overlay"></div>
+
+    <!-- Main Content -->
+    <div class="dashboard-container">
+        <h1 class="page-title">
+            <i class="fas fa-heartbeat"></i> Continuous Health Monitoring
+        </h1>
+
+        <!-- Vital Signs -->
+        <div class="category-section">
+            <div class="category-header">
+                <i class="fas fa-heart-pulse"></i>
+                <span>Vital Signs</span>
+            </div>
+            <div class="category-content">
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="metric-card">
+                            <h5><i class="fas fa-heartbeat"></i> Heart Rate (HR)</h5>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="metric-card">
+                            <h5><i class="fas fa-lungs"></i> Blood Oxygen (SpO₂)</h5>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="metric-card">
+                            <h5><i class="fas fa-wind"></i> Respiratory Rate (RR)</h5>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="metric-card">
+                            <h5><i class="fas fa-activity"></i> Blood Pressure (BP)</h5>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="metric-card">
+                            <h5><i class="fas fa-thermometer-half"></i> Body Temperature</h5>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Activity & Movement -->
+        <div class="category-section">
+            <div class="category-header">
+                <i class="fas fa-walking"></i>
+                <span>Activity & Movement</span>
+            </div>
+            <div class="category-content">
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="metric-card">
+                            <h5><i class="fas fa-shoe-prints"></i> Steps Count</h5>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="metric-card">
+                            <h5><i class="fas fa-route"></i> Distance Covered</h5>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="metric-card">
+                            <h5><i class="fas fa-fire"></i> Calories Burned</h5>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="metric-card">
+                            <h5><i class="fas fa-bolt"></i> Activity Intensity</h5>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="metric-card">
+                            <h5><i class="fas fa-chair"></i> Posture Monitoring</h5>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="metric-card">
+                            <h5><i class="fas fa-person-falling"></i> Fall Detection</h5>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Sleep & Recovery -->
+        <div class="category-section">
+            <div class="category-header">
+                <i class="fas fa-bed"></i>
+                <span>Sleep & Recovery</span>
+            </div>
+            <div class="category-content">
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="metric-card">
+                            <h5><i class="fas fa-moon"></i> Sleep Stages</h5>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="metric-card">
+                            <h5><i class="fas fa-clock"></i> Sleep Duration & Quality</h5>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="metric-card">
+                            <h5><i class="fas fa-chart-line"></i> Heart Rate Variability (HRV)</h5>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="metric-card">
+                            <h5><i class="fas fa-heart"></i> Resting Heart Rate (RHR)</h5>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Metabolic & Energy -->
+        <div class="category-section">
+            <div class="category-header">
+                <i class="fas fa-battery-three-quarters"></i>
+                <span>Metabolic & Energy</span>
+            </div>
+            <div class="category-content">
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="metric-card">
+                            <h5><i class="fas fa-vial"></i> Continuous Glucose Monitoring (CGM)</h5>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="metric-card">
+                            <h5><i class="fas fa-tint"></i> Hydration Level Tracking</h5>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="metric-card">
+                            <h5><i class="fas fa-dumbbell"></i> Basal Metabolic Rate (BMR)</h5>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="metric-card">
+                            <h5><i class="fas fa-burn"></i> Energy Expenditure</h5>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Stress & Mental Health -->
+        <div class="category-section">
+            <div class="category-header">
+                <i class="fas fa-brain"></i>
+                <span>Stress & Mental Health</span>
+            </div>
+            <div class="category-content">
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="metric-card">
+                            <h5><i class="fas fa-head-side-virus"></i> Stress Levels</h5>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="metric-card">
+                            <h5><i class="fas fa-smile"></i> Mood Tracking</h5>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="metric-card">
+                            <h5><i class="fas fa-lungs"></i> Breathing Pattern Analysis</h5>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Environmental Monitoring -->
+        <div class="category-section">
+            <div class="category-header">
+                <i class="fas fa-leaf"></i>
+                <span>Environmental Monitoring</span>
+            </div>
+            <div class="category-content">
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="metric-card">
+                            <h5><i class="fas fa-volume-up"></i> Ambient Noise Levels</h5>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="metric-card">
+                            <h5><i class="fas fa-cloud"></i> Air Quality Index (AQI)</h5>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="metric-card">
+                            <h5><i class="fas fa-sun"></i> UV Exposure</h5>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Emergency & Alerts -->
+        <div class="category-section">
+            <div class="category-header">
+                <i class="fas fa-exclamation-triangle"></i>
+                <span>Emergency & Alerts</span>
+            </div>
+            <div class="category-content">
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="metric-card">
+                            <h5><i class="fas fa-heart-crack"></i> Irregular Heartbeat Detection</h5>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="metric-card">
+                            <h5><i class="fas fa-exclamation-circle"></i> Blood Pressure Alerts</h5>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="metric-card">
+                            <h5><i class="fas fa-wind"></i> Low Oxygen Alerts</h5>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="metric-card">
+                            <h5><i class="fas fa-phone-volume"></i> Fall/Accident Emergency SOS</h5>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="metric-card">
+                            <h5><i class="fas fa-bell"></i> Custom Health Threshold Alerts</h5>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Integration & Analytics -->
+        <div class="category-section">
+            <div class="category-header">
+                <i class="fas fa-microchip"></i>
+                <span>Integration & Analytics</span>
+            </div>
+            <div class="category-content">
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="metric-card">
+                            <h5><i class="fas fa-watch"></i> Wearable Integration</h5>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="metric-card">
+                            <h5><i class="fas fa-robot"></i> AI-driven Health Insights</h5>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="metric-card">
+                            <h5><i class="fas fa-file-alt"></i> Weekly/Monthly Progress Reports</h5>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/js/bootstrap.bundle.min.js"></script>
+    <script>
+        const menuBtn = document.getElementById('menuBtn');
+        const closeBtn = document.getElementById('closeBtn');
+        const sidebar = document.getElementById('sidebar');
+        const overlay = document.getElementById('overlay');
+        const themeToggle = document.getElementById('themeToggle');
+
+        // Toggle sidebar
+        menuBtn.addEventListener('click', () => {
+            sidebar.classList.add('active');
+            overlay.classList.add('active');
+        });
+
+        closeBtn.addEventListener('click', () => {
+            sidebar.classList.remove('active');
+            overlay.classList.remove('active');
+        });
+
+        overlay.addEventListener('click', () => {
+            sidebar.classList.remove('active');
+            overlay.classList.remove('active');
+        });
+
+        // Theme toggle functionality
+        const currentTheme = localStorage.getItem('theme') || 'light';
+        if (currentTheme === 'dark') {
+            document.documentElement.setAttribute('data-theme', 'dark');
+            themeToggle.checked = true;
+        }
+
+        themeToggle.addEventListener('change', () => {
+            if (themeToggle.checked) {
+                document.documentElement.setAttribute('data-theme', 'dark');
+                localStorage.setItem('theme', 'dark');
+            } else {
+                document.documentElement.setAttribute('data-theme', 'light');
+                localStorage.setItem('theme', 'light');
+            }
+        });
+
+        // Notification system
+        const notificationBtn = document.getElementById('notificationBtn');
+        const notificationBadge = document.getElementById('notificationBadge');
+
+        notificationBtn.addEventListener('click', () => {
+            alert('Notification system ready for future implementation!');
+            notificationBadge.classList.remove('active');
+        });
+
+        // Add click handlers to metric cards for future functionality
+        const metricCards = document.querySelectorAll('.metric-card');
+        metricCards.forEach(card => {
+            card.addEventListener('click', function() {
+                const metricName = this.querySelector('h5').textContent.trim();
+                console.log('Clicked on:', metricName);
+                // Future: Navigate to detailed view of this metric
+            });
+        });
+    </script>
+</body>
+</html>

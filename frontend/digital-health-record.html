@@ -1,0 +1,636 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Digital Health Record</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <style>
+        :root {
+            --bg-color: #f8f9fa;
+            --text-color: #212529;
+            --card-bg: #ffffff;
+            --sidebar-bg: #ffffff;
+            --shadow: rgba(0, 0, 0, 0.1);
+            --accent-1: #f093fb;
+            --accent-2: #f5576c;
+        }
+
+        [data-theme="dark"] {
+            --bg-color: #1a1a2e;
+            --text-color: #eaeaea;
+            --card-bg: #16213e;
+            --sidebar-bg: #0f3460;
+            --shadow: rgba(0, 0, 0, 0.5);
+        }
+
+        * {
+            transition: background-color 0.3s ease, color 0.3s ease;
+        }
+
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            min-height: 100vh;
+        }
+
+        .navbar {
+            background-color: var(--card-bg);
+            box-shadow: 0 2px 10px var(--shadow);
+            padding: 1rem 2rem;
+        }
+
+        .menu-btn {
+            background: none;
+            border: none;
+            font-size: 1.5rem;
+            color: var(--text-color);
+            cursor: pointer;
+        }
+
+        .username {
+            font-weight: 600;
+            color: var(--text-color);
+        }
+
+        .notification-btn {
+            position: relative;
+            background: none;
+            border: none;
+            font-size: 1.3rem;
+            color: var(--text-color);
+            cursor: pointer;
+        }
+
+        .notification-badge {
+            position: absolute;
+            top: -5px;
+            right: -5px;
+            background: #dc3545;
+            color: white;
+            border-radius: 50%;
+            width: 18px;
+            height: 18px;
+            font-size: 0.7rem;
+            display: none;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .notification-badge.active {
+            display: flex;
+        }
+
+        .sidebar {
+            position: fixed;
+            left: -300px;
+            top: 0;
+            width: 300px;
+            height: 100vh;
+            background-color: var(--sidebar-bg);
+            box-shadow: 2px 0 10px var(--shadow);
+            transition: left 0.3s ease;
+            z-index: 1050;
+            overflow-y: auto;
+        }
+
+        .sidebar.active {
+            left: 0;
+        }
+
+        .sidebar-header {
+            padding: 1.5rem;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .close-btn {
+            background: none;
+            border: none;
+            font-size: 1.5rem;
+            color: var(--text-color);
+            cursor: pointer;
+            float: right;
+        }
+
+        .sidebar-menu {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+
+        .sidebar-menu li {
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        .sidebar-menu a {
+            display: block;
+            padding: 1rem 1.5rem;
+            color: var(--text-color);
+            text-decoration: none;
+            transition: background-color 0.2s;
+        }
+
+        .sidebar-menu a:hover {
+            background-color: rgba(255, 255, 255, 0.05);
+        }
+
+        .sidebar-menu i {
+            margin-right: 10px;
+            width: 20px;
+        }
+
+        .theme-toggle {
+            padding: 1rem 1.5rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            display: none;
+            z-index: 1040;
+        }
+
+        .overlay.active {
+            display: block;
+        }
+
+        .dashboard-container {
+            max-width: 1400px;
+            margin: 2rem auto;
+            padding: 0 2rem;
+        }
+
+        .page-title {
+            text-align: center;
+            margin-bottom: 2rem;
+            font-size: 2.5rem;
+            font-weight: 700;
+            background: linear-gradient(135deg, var(--accent-1) 0%, var(--accent-2) 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .category-section {
+            margin-bottom: 2rem;
+        }
+
+        .category-header {
+            background: linear-gradient(135deg, var(--accent-1) 0%, var(--accent-2) 100%);
+            color: white;
+            padding: 1rem 1.5rem;
+            border-radius: 15px 15px 0 0;
+            font-size: 1.3rem;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .category-header i {
+            font-size: 1.5rem;
+        }
+
+        .category-content {
+            background-color: var(--card-bg);
+            border-radius: 0 0 15px 15px;
+            padding: 1.5rem;
+            box-shadow: 0 5px 20px var(--shadow);
+        }
+
+        .metric-card {
+            background: linear-gradient(135deg, rgba(240, 147, 251, 0.05) 0%, rgba(245, 87, 108, 0.05) 100%);
+            border-left: 4px solid var(--accent-1);
+            padding: 1rem 1.5rem;
+            border-radius: 10px;
+            margin-bottom: 1rem;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        .metric-card:hover {
+            transform: translateX(5px);
+            box-shadow: 0 3px 15px var(--shadow);
+        }
+
+        .metric-card h5 {
+            margin: 0;
+            font-size: 1rem;
+            font-weight: 600;
+            color: var(--text-color);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .metric-card i {
+            color: var(--accent-1);
+        }
+
+        .form-switch .form-check-input {
+            width: 3rem;
+            height: 1.5rem;
+            cursor: pointer;
+        }
+
+        .form-switch .form-check-input:checked {
+            background-color: #f093fb;
+            border-color: #f093fb;
+        }
+
+        @media (max-width: 768px) {
+            .page-title {
+                font-size: 1.8rem;
+            }
+            
+            .category-header {
+                font-size: 1.1rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Navbar -->
+    <nav class="navbar">
+        <div class="container-fluid">
+            <button class="menu-btn" id="menuBtn">
+                <i class="fas fa-bars"></i>
+            </button>
+            <span class="username">
+                <i class="fas fa-user-circle me-2"></i>John Doe
+            </span>
+            <button class="notification-btn" id="notificationBtn">
+                <i class="fas fa-bell"></i>
+                <span class="notification-badge" id="notificationBadge">3</span>
+            </button>
+        </div>
+    </nav>
+
+    <!-- Sidebar -->
+    <div class="sidebar" id="sidebar">
+        <div class="sidebar-header">
+            <button class="close-btn" id="closeBtn">
+                <i class="fas fa-times"></i>
+            </button>
+            <h5 class="mt-2">Menu</h5>
+        </div>
+        <div class="theme-toggle">
+            <span><i class="fas fa-moon"></i> Dark Mode</span>
+            <div class="form-check form-switch">
+                <input class="form-check-input" type="checkbox" id="themeToggle">
+            </div>
+        </div>
+        <ul class="sidebar-menu">
+            <li><a href="#"><i class="fas fa-user"></i>User Details</a></li>
+            <li><a href="#"><i class="fas fa-calendar-check"></i>Appointments</a></li>
+            <li><a href="#"><i class="fas fa-cog"></i>Settings</a></li>
+            <li><a href="#"><i class="fas fa-file-medical"></i>Medical History</a></li>
+            <li><a href="#"><i class="fas fa-pills"></i>Medications</a></li>
+            <li><a href="#"><i class="fas fa-chart-line"></i>Health Reports</a></li>
+            <li><a href="#"><i class="fas fa-info-circle"></i>Help & Support</a></li>
+            <li><a href="#"><i class="fas fa-sign-out-alt"></i>Logout</a></li>
+        </ul>
+    </div>
+
+    <!-- Overlay -->
+    <div class="overlay" id="overlay"></div>
+
+    <!-- Main Content -->
+    <div class="dashboard-container">
+        <h1 class="page-title">
+            <i class="fas fa-folder-open"></i> Digital Health Record
+        </h1>
+
+        <!-- Personal & Demographic Info -->
+        <div class="category-section">
+            <div class="category-header">
+                <i class="fas fa-id-card"></i>
+                <span>Personal & Demographic Info</span>
+            </div>
+            <div class="category-content">
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="metric-card">
+                            <h5><i class="fas fa-user"></i> Name, Age, Sex, Blood Group</h5>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="metric-card">
+                            <h5><i class="fas fa-allergies"></i> Allergies (Drug, Food, Environmental)</h5>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="metric-card">
+                            <h5><i class="fas fa-users"></i> Family Medical History</h5>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="metric-card">
+                            <h5><i class="fas fa-syringe"></i> Immunization / Vaccination Records</h5>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Medical History -->
+        <div class="category-section">
+            <div class="category-header">
+                <i class="fas fa-notes-medical"></i>
+                <span>Medical History</span>
+            </div>
+            <div class="category-content">
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="metric-card">
+                            <h5><i class="fas fa-procedures"></i> Past Illnesses & Surgeries</h5>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="metric-card">
+                            <h5><i class="fas fa-disease"></i> Chronic Conditions</h5>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="metric-card">
+                            <h5><i class="fas fa-hospital"></i> Previous Hospitalizations</h5>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="metric-card">
+                            <h5><i class="fas fa-band-aid"></i> History of Injuries</h5>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Medications & Prescriptions -->
+        <div class="category-section">
+            <div class="category-header">
+                <i class="fas fa-pills"></i>
+                <span>Medications & Prescriptions</span>
+            </div>
+            <div class="category-content">
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="metric-card">
+                            <h5><i class="fas fa-capsules"></i> Current Medications</h5>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="metric-card">
+                            <h5><i class="fas fa-history"></i> Past Medications</h5>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="metric-card">
+                            <h5><i class="fas fa-tablets"></i> OTC Drugs & Supplements</h5>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="metric-card">
+                            <h5><i class="fas fa-file-prescription"></i> Prescription Scans/Uploads</h5>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Test Results & Reports -->
+        <div class="category-section">
+            <div class="category-header">
+                <i class="fas fa-file-medical-alt"></i>
+                <span>Test Results & Reports</span>
+            </div>
+            <div class="category-content">
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="metric-card">
+                            <h5><i class="fas fa-vial"></i> Lab Reports (Blood, Urine, etc.)</h5>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="metric-card">
+                            <h5><i class="fas fa-x-ray"></i> Imaging (X-rays, MRI, CT Scans)</h5>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="metric-card">
+                            <h5><i class="fas fa-microscope"></i> Pathology Reports</h5>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="metric-card">
+                            <h5><i class="fas fa-heartbeat"></i> ECG/Echo Records</h5>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="metric-card">
+                            <h5><i class="fas fa-upload"></i> Upload Reports (PDF/Images)</h5>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Vitals & Monitoring History -->
+        <div class="category-section">
+            <div class="category-header">
+                <i class="fas fa-chart-line"></i>
+                <span>Vitals & Monitoring History</span>
+            </div>
+            <div class="category-content">
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="metric-card">
+                            <h5><i class="fas fa-heart-pulse"></i> Long-term Vital Trends</h5>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="metric-card">
+                            <h5><i class="fas fa-bed"></i> Sleep History Logs</h5>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="metric-card">
+                            <h5><i class="fas fa-weight-scale"></i> Weight & BMI Changes</h5>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="metric-card">
+                            <h5><i class="fas fa-link"></i> Continuous Monitoring Integration</h5>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Doctor & Hospital Records -->
+        <div class="category-section">
+            <div class="category-header">
+                <i class="fas fa-user-doctor"></i>
+                <span>Doctor & Hospital Records</span>
+            </div>
+            <div class="category-content">
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="metric-card">
+                            <h5><i class="fas fa-stethoscope"></i> Primary Physician Details</h5>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="metric-card">
+                            <h5><i class="fas fa-user-md"></i> Specialist Visits & Notes</h5>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="metric-card">
+                            <h5><i class="fas fa-hospital-alt"></i> Hospital Admissions & Discharge</h5>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="metric-card">
+                            <h5><i class="fas fa-file-signature"></i> Referral Letters</h5>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Lifestyle & Preventive Records -->
+        <div class="category-section">
+            <div class="category-header">
+                <i class="fas fa-heart"></i>
+                <span>Lifestyle & Preventive Records</span>
+            </div>
+            <div class="category-content">
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="metric-card">
+                            <h5><i class="fas fa-utensils"></i> Diet & Nutrition Logs</h5>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="metric-card">
+                            <h5><i class="fas fa-running"></i> Exercise/Fitness Routines</h5>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="metric-card">
+                            <h5><i class="fas fa-smoking"></i> Substance Use</h5>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="metric-card">
+                            <h5><i class="fas fa-shield-alt"></i> Vaccination & Preventive Screenings</h5>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Insurance & Legal -->
+        <div class="category-section">
+            <div class="category-header">
+                <i class="fas fa-shield-halved"></i>
+                <span>Insurance & Legal</span>
+            </div>
+            <div class="category-content">
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="metric-card">
+                            <h5><i class="fas fa-id-card-alt"></i> Health Insurance Details</h5>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="metric-card">
+                            <h5><i class="fas fa-hashtag"></i> Policy Number & Coverage</h5>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="metric-card">
+                            <h5><i class="fas fa-phone"></i> Emergency Contacts</h5>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="metric-card">
+                            <h5><i class="fas fa-file-contract"></i> Advance Directives / Organ Donor</h5>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/js/bootstrap.bundle.min.js"></script>
+    <script>
+        const menuBtn = document.getElementById('menuBtn');
+        const closeBtn = document.getElementById('closeBtn');
+        const sidebar = document.getElementById('sidebar');
+        const overlay = document.getElementById('overlay');
+        const themeToggle = document.getElementById('themeToggle');
+
+        // Toggle sidebar
+        menuBtn.addEventListener('click', () => {
+            sidebar.classList.add('active');
+            overlay.classList.add('active');
+        });
+
+        closeBtn.addEventListener('click', () => {
+            sidebar.classList.remove('active');
+            overlay.classList.remove('active');
+        });
+
+        overlay.addEventListener('click', () => {
+            sidebar.classList.remove('active');
+            overlay.classList.remove('active');
+        });
+
+        // Theme toggle functionality
+        const currentTheme = localStorage.getItem('theme') || 'light';
+        if (currentTheme === 'dark') {
+            document.documentElement.setAttribute('data-theme', 'dark');
+            themeToggle.checked = true;
+        }
+
+        themeToggle.addEventListener('change', () => {
+            if (themeToggle.checked) {
+                document.documentElement.setAttribute('data-theme', 'dark');
+                localStorage.setItem('theme', 'dark');
+            } else {
+                document.documentElement.setAttribute('data-theme', 'light');
+                localStorage.setItem('theme', 'light');
+            }
+        });
+
+        // Notification system
+        const notificationBtn = document.getElementById('notificationBtn');
+        const notificationBadge = document.getElementById('notificationBadge');
+
+        notificationBtn.addEventListener('click', () => {
+            alert('Notification system ready for future implementation!');
+            notificationBadge.classList.remove('active');
+        });
+
+        // Add click handlers to metric cards for future functionality
+        const metricCards = document.querySelectorAll('.metric-card');
+        metricCards.forEach(card => {
+            card.addEventListener('click', function() {
+                const metricName = this.querySelector('h5').textContent.trim();
+                console.log('Clicked on:', metricName);
+                // Future: Navigate to detailed view of this metric
+            });
+        });
+    </script>
+</body>
+</html>

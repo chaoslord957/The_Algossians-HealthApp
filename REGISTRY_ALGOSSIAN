@@ -1,0 +1,289 @@
+import React, { useState, useEffect } from 'react';
+import { Heart, Globe, Shield, Upload, CheckCircle, Info } from 'lucide-react';
+
+export default function AlgossianRegistry() {
+  const [step, setStep] = useState(0);
+  const [captcha, setCaptcha] = useState('');
+  const [captchaInput, setCaptchaInput] = useState('');
+  const [formData, setFormData] = useState({
+    language: '', fullName: '', age: '', gender: '', email: '', mobile: '',
+    state: '', district: '', pincode: '', idType: '', idFile: null, photoFile: null
+  });
+
+  const states = ['Andhra Pradesh', 'Assam', 'Bihar', 'Delhi', 'Gujarat', 'Karnataka', 
+    'Kerala', 'Maharashtra', 'Punjab', 'Rajasthan', 'Tamil Nadu', 'West Bengal'];
+
+  useEffect(() => {
+    setCaptcha(Math.random().toString(36).substring(2, 8).toUpperCase());
+  }, []);
+
+  const handleChange = (e) => {
+    const { name, value } = e.target;
+    setFormData(prev => ({ ...prev, [name]: value }));
+  };
+
+  const handleFile = (e, field) => {
+    setFormData(prev => ({ ...prev, [field]: e.target.files[0] }));
+  };
+
+  const next = () => setStep(step + 1);
+  const back = () => setStep(step - 1);
+
+  return (
+    <div className="min-h-screen bg-gradient-to-br from-blue-100 to-green-100 p-4">
+      <div className="max-w-2xl mx-auto">
+        
+        {/* Header */}
+        <div className="bg-white rounded-xl shadow-lg p-6 mb-4">
+          <div className="flex items-center justify-center mb-2">
+            <Heart className="w-10 h-10 text-red-500 mr-2" />
+            <h1 className="text-3xl font-bold">ALGOSSIAN HEALTH</h1>
+          </div>
+          <p className="text-center text-gray-600">Registration Portal</p>
+          
+          {/* Progress */}
+          <div className="mt-4">
+            <p className="text-xs text-center mb-2">Step {step + 1} of 6</p>
+            <div className="w-full bg-gray-200 rounded-full h-2">
+              <div className="bg-blue-500 h-2 rounded-full transition-all" 
+                   style={{width: `${((step+1)/6)*100}%`}}></div>
+            </div>
+          </div>
+        </div>
+
+        {/* Form */}
+        <div className="bg-white rounded-xl shadow-lg p-6">
+          
+          {/* STEP 0: Language */}
+          {step === 0 && (
+            <div>
+              <div className="flex items-center mb-4">
+                <Globe className="w-6 h-6 text-blue-500 mr-2" />
+                <h2 className="text-xl font-bold">Select Language</h2>
+              </div>
+              <div className="grid grid-cols-3 gap-3">
+                {['English', 'हिंदी', 'অসমীয়া'].map(lang => (
+                  <button key={lang} onClick={() => setFormData({...formData, language: lang})}
+                    className={`p-4 rounded-lg border-2 ${formData.language === lang ? 
+                      'border-blue-500 bg-blue-50' : 'border-gray-300'}`}>
+                    {lang}
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* STEP 1: CAPTCHA */}
+          {step === 1 && (
+            <div>
+              <div className="flex items-center mb-4">
+                <Shield className="w-6 h-6 text-green-500 mr-2" />
+                <h2 className="text-xl font-bold">Verify You're Human</h2>
+              </div>
+              <div className="bg-gray-100 p-6 rounded-lg text-center mb-4">
+                <div className="bg-white inline-block px-6 py-3 rounded border-2 border-dashed mb-2">
+                  <span className="text-2xl font-mono font-bold">{captcha}</span>
+                </div>
+                <br/>
+                <button onClick={() => setCaptcha(Math.random().toString(36).substring(2,8).toUpperCase())}
+                  className="text-blue-500 text-sm">Refresh</button>
+              </div>
+              <input type="text" value={captchaInput} onChange={(e) => setCaptchaInput(e.target.value)}
+                className="w-full px-4 py-3 border rounded-lg" placeholder="Enter CAPTCHA" />
+            </div>
+          )}
+
+          {/* STEP 2: Personal Info */}
+          {step === 2 && (
+            <div className="space-y-3">
+              <h2 className="text-xl font-bold mb-4">Personal Details</h2>
+              <input type="text" name="fullName" value={formData.fullName} onChange={handleChange}
+                className="w-full px-4 py-3 border rounded-lg" placeholder="Full Name *" />
+              <div className="grid grid-cols-2 gap-3">
+                <input type="number" name="age" value={formData.age} onChange={handleChange}
+                  className="w-full px-4 py-3 border rounded-lg" placeholder="Age *" />
+                <select name="gender" onChange={handleChange} className="w-full px-4 py-3 border rounded-lg">
+                  <option value="">Gender *</option>
+                  <option>Male</option>
+                  <option>Female</option>
+                  <option>Other</option>
+                </select>
+              </div>
+            </div>
+          )}
+
+          {/* STEP 3: Contact */}
+          {step === 3 && (
+            <div className="space-y-3">
+              <h2 className="text-xl font-bold mb-4">Contact Information</h2>
+              <input type="email" name="email" value={formData.email} onChange={handleChange}
+                className="w-full px-4 py-3 border rounded-lg" placeholder="Email *" />
+              <input type="tel" name="mobile" value={formData.mobile} onChange={handleChange}
+                className="w-full px-4 py-3 border rounded-lg" placeholder="Mobile (10 digits) *" maxLength="10" />
+              
+              <div className="bg-yellow-50 border border-yellow-300 rounded-lg p-3 mt-4">
+                <p className="text-sm text-yellow-800">
+                  📌 <strong>Add Later:</strong> OTP verification for email & mobile
+                </p>
+              </div>
+            </div>
+          )}
+
+          {/* STEP 4: Address */}
+          {step === 4 && (
+            <div className="space-y-3">
+              <h2 className="text-xl font-bold mb-4">Address</h2>
+              <div className="grid grid-cols-2 gap-3">
+                <input type="text" value="India" disabled className="px-4 py-3 border rounded-lg bg-gray-50" />
+                <select name="state" onChange={handleChange} className="w-full px-4 py-3 border rounded-lg">
+                  <option value="">State *</option>
+                  {states.map(s => <option key={s}>{s}</option>)}
+                </select>
+              </div>
+              <div className="grid grid-cols-2 gap-3">
+                <input type="text" name="district" value={formData.district} onChange={handleChange}
+                  className="w-full px-4 py-3 border rounded-lg" placeholder="District *" />
+                <input type="text" name="pincode" value={formData.pincode} onChange={handleChange}
+                  className="w-full px-4 py-3 border rounded-lg" placeholder="PIN Code *" maxLength="6" />
+              </div>
+              
+              <div className="bg-yellow-50 border border-yellow-300 rounded-lg p-3 mt-4">
+                <p className="text-sm text-yellow-800">
+                  📌 <strong>Add Later:</strong> Complete address field, All 37 states/UTs
+                </p>
+              </div>
+            </div>
+          )}
+
+          {/* STEP 5: ID & Photo */}
+          {step === 5 && (
+            <div className="space-y-4">
+              <h2 className="text-xl font-bold mb-4">Identity Proof</h2>
+              
+              <select name="idType" onChange={handleChange} className="w-full px-4 py-3 border rounded-lg">
+                <option value="">Select ID Type *</option>
+                <option>Aadhar Card</option>
+                <option>10th Marksheet</option>
+                <option>12th Marksheet</option>
+                <option>Passport</option>
+              </select>
+
+              <div className="border-2 border-dashed rounded-lg p-6 text-center">
+                <Upload className="w-8 h-8 text-gray-400 mx-auto mb-2" />
+                <input type="file" onChange={(e) => handleFile(e, 'idFile')} 
+                  className="hidden" id="idFile" />
+                <label htmlFor="idFile" className="cursor-pointer text-blue-500">
+                  Upload ID Document *
+                </label>
+                {formData.idFile && <p className="text-green-600 text-sm mt-2">✓ {formData.idFile.name}</p>}
+              </div>
+
+              <div className="border-2 border-dashed rounded-lg p-6 text-center">
+                <Upload className="w-8 h-8 text-gray-400 mx-auto mb-2" />
+                <input type="file" accept="image/*" onChange={(e) => handleFile(e, 'photoFile')} 
+                  className="hidden" id="photoFile" />
+                <label htmlFor="photoFile" className="cursor-pointer text-blue-500">
+                  Upload Your Photo *
+                </label>
+                {formData.photoFile && <p className="text-green-600 text-sm mt-2">✓ {formData.photoFile.name}</p>}
+              </div>
+
+              <div className="bg-yellow-50 border border-yellow-300 rounded-lg p-3">
+                <p className="text-sm text-yellow-800">
+                  📌 <strong>Add Later:</strong> Live camera capture option
+                </p>
+              </div>
+            </div>
+          )}
+
+          {/* Navigation Buttons */}
+          <div className="flex justify-between mt-6 pt-4 border-t">
+            {step > 0 && (
+              <button onClick={back} className="px-6 py-3 border rounded-lg hover:bg-gray-50">
+                ← Back
+              </button>
+            )}
+            {step < 5 ? (
+              <button onClick={next} className="ml-auto px-6 py-3 bg-blue-500 text-white rounded-lg hover:bg-blue-600">
+                Next →
+              </button>
+            ) : (
+              <button onClick={() => alert('Registration submitted! (Add backend integration next)')}
+                className="ml-auto px-6 py-3 bg-green-500 text-white rounded-lg hover:bg-green-600">
+                Submit
+              </button>
+            )}
+          </div>
+
+        </div>
+
+        {/* Features Guide */}
+        <div className="mt-4 bg-white rounded-xl shadow-lg p-6">
+          <div className="flex items-center mb-3">
+            <Info className="w-5 h-5 text-blue-500 mr-2" />
+            <h3 className="font-bold text-lg">Features to Add Later</h3>
+          </div>
+          
+          <div className="space-y-2 text-sm">
+            <div className="flex items-start">
+              <CheckCircle className="w-4 h-4 text-green-500 mr-2 mt-0.5 flex-shrink-0" />
+              <div>
+                <strong>Step 3:</strong> Add OTP verification system for email & mobile (two-factor authentication)
+              </div>
+            </div>
+            
+            <div className="flex items-start">
+              <CheckCircle className="w-4 h-4 text-green-500 mr-2 mt-0.5 flex-shrink-0" />
+              <div>
+                <strong>Step 4:</strong> Add full address textarea field, Include all 37 Indian states/UTs
+              </div>
+            </div>
+            
+            <div className="flex items-start">
+              <CheckCircle className="w-4 h-4 text-green-500 mr-2 mt-0.5 flex-shrink-0" />
+              <div>
+                <strong>Step 5:</strong> Add live camera capture using webcam API
+              </div>
+            </div>
+            
+            <div className="flex items-start">
+              <CheckCircle className="w-4 h-4 text-green-500 mr-2 mt-0.5 flex-shrink-0" />
+              <div>
+                <strong>New Step 6:</strong> Add health information (Blood group, DOB, Allergies, Chronic conditions, Emergency contact)
+              </div>
+            </div>
+            
+            <div className="flex items-start">
+              <CheckCircle className="w-4 h-4 text-green-500 mr-2 mt-0.5 flex-shrink-0" />
+              <div>
+                <strong>New Step 7:</strong> Add government health schemes (Ayushman Bharat, CGHS, ESI, etc.) with document upload
+              </div>
+            </div>
+            
+            <div className="flex items-start">
+              <CheckCircle className="w-4 h-4 text-green-500 mr-2 mt-0.5 flex-shrink-0" />
+              <div>
+                <strong>New Step 8:</strong> Add health insurance details with policy upload
+              </div>
+            </div>
+            
+            <div className="flex items-start">
+              <CheckCircle className="w-4 h-4 text-green-500 mr-2 mt-0.5 flex-shrink-0" />
+              <div>
+                <strong>Additional:</strong> Form validation, Error messages, Backend API integration, Data submission & storage
+              </div>
+            </div>
+            
+            <div className="flex items-start">
+              <CheckCircle className="w-4 h-4 text-green-500 mr-2 mt-0.5 flex-shrink-0" />
+              <div>
+                <strong>Language:</strong> Expand regional language support (currently 3, can add 15+ languages)
+              </div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  );
+}
